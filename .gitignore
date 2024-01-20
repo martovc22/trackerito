@@ -1,5 +1,9 @@
 
 .env
+<<<<<<< HEAD
+=======
+.trackerito-83f27862540c.json
+>>>>>>> 599a4529c74c102427f2a2cafdddec965aac9284
 trackerito-83f27862540c.json
 .tiimezone_not_implemented.py
 .spotifyplaylist.py
