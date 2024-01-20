@@ -1,6 +1,0 @@
-python-telegram-bot == 20.7
-google-auth == 2.26.1
-google-api-python-client == 2.111.0
-python-dotenv == 1.0.0
-pytz == 2023.3.post1
-flask == 3.0.0
