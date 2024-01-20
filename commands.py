@@ -5,7 +5,7 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKey
 from telegram.ext import CallbackContext
 from googlesheetsimport import log_water_intake, log_alcohol_intake, log_coffee_intake, insert_into_sheet_food, log_mood, log_symptoms, log_wellbeing
 from googlesheetsimport import log_vitamins_supplements, log_sleep_data, log_social_battery_energy, log_heart_palpitations_data, cold_symptoms_data
-from googlesheetsimport import log_productivity_data
+from googlesheetsimport import log_productivity_data, log_day_overall, log_hygiene_data
 from datetime import datetime
 from googlesheetsimport import tz_str as time_zone
 from telegram.ext import JobQueue
@@ -54,6 +54,9 @@ async def commands(update: Update, context: CallbackContext) -> None:
             "/sleep - Log your sleep\n"
             "/battery - Log your social battery\n"
             "/palpitations - Log your heart palpitations\n"
+            "/cold - Log your cold symptoms\n"
+            "/productivity - Log your productivity\n"
+            "/day_rate - rate your day overall\n"
              "Other shall come soon🚨"
     )
 
@@ -558,7 +561,7 @@ async def log_cold_symptoms_details(update: Update, context: CallbackContext) ->
         context.user_data['cold_symptoms'].append(symptom)
         cold_symptoms_data(symptom)
 
-    # more symtoms? check
+    # more symptoms? check
     index += 1
     if index < len(symptoms_list):
         await update.message.reply_text(
@@ -572,7 +575,7 @@ async def log_cold_symptoms_details(update: Update, context: CallbackContext) ->
         return ConversationHandler.END
 
 # Felling productive tracking
-PRODUCTIVITY_RATING = range(1)
+PRODUCTIVITY_RATING = range(9)
 async def ask_productivity(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['1 - 😴 Not productive', '2 - 🙁 Slightly productive'],
                       ['3 - 😐 Moderately productive', '4 - 🙂 Quite productive'],
@@ -597,6 +600,72 @@ async def log_productivity(update: Update, context: CallbackContext) -> int:
         await update.message.reply_text('Invalid input. Please enter a valid number.')
         return PRODUCTIVITY_RATING
 
+
+
+# Rating the day overall (in the evening)
+DAY_RATING = range(10)
+async def ask_day_rating(update: Update, context: CallbackContext) -> int:
+    reply_keyboard = [['1 - 😞 Very Bad', '2 - 🙁 Bad'],
+                      ['3 - 😐 Okay', '4 - 🙂 Good'],
+                      ['5 - 🌟 Excellent']]
+    await update.message.reply_text(
+        'How would you rate your day overall? (Rate from 1-5)',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
+    )
+    return DAY_RATING
+
+async def log_day_rating(update: Update, context: CallbackContext) -> int:
+    day_rating = update.message.text.split(' ')[0]  # Extracts the number from the response
+    try:
+        day_rating = int(day_rating)
+        if 1 <= day_rating <= 5:
+            log_day_overall(day_rating)
+            await update.message.reply_text(f"Day rating of {day_rating} logged!")
+            return ConversationHandler.END
+        else:
+            await update.message.reply_text('Invalid input. Please enter a number between 1 and 5.')
+            return DAY_RATING
+    except ValueError:
+        await update.message.reply_text('Invalid input. Please enter a valid number.')
+        return DAY_RATING
+
+# Hygiene/routine tracking
+HYGIENE_ROUTINE, SKIN_CARE, BRUSHING_TEETH, SHOWER, SHAVE = range(5)
+async def ask_hygiene_routine(update: Update, context: CallbackContext) -> int:
+    await update.message.reply_text(
+        "Let's go through your hygiene routine. Did you take care of your skin today? (Yes/No)",
+        reply_markup=ReplyKeyboardMarkup([['Yes', 'No']], one_time_keyboard=True, resize_keyboard=True)
+    )
+    return SKIN_CARE
+async def ask_skin_care(update: Update, context: CallbackContext) -> int:
+    context.user_data['hygiene'] = {'skin_care': update.message.text}
+    await update.message.reply_text(
+        "Burshed your teeth?",
+        reply_markup=ReplyKeyboardMarkup([['Yes', 'No']], one_time_keyboard=True, resize_keyboard=True)
+    )
+    return BRUSHING_TEETH
+
+async def ask_brushing_teeth(update: Update, context: CallbackContext) -> int:
+    context.user_data['hygiene']['brushing_teeth'] = update.message.text
+    await update.message.reply_text(
+        "Did you take a shower?",
+        reply_markup=ReplyKeyboardMarkup([['Yes', 'No']], one_time_keyboard=True, resize_keyboard=True)
+    )
+    return SHOWER
+
+async def ask_shower(update: Update, context: CallbackContext) -> int:
+    context.user_data['hygiene']['shower'] = update.message.text
+    await update.message.reply_text(
+        "Did you shave?",
+        reply_markup=ReplyKeyboardMarkup([['Yes', 'No']], one_time_keyboard=True, resize_keyboard=True)
+    )
+    return SHAVE
+
+async def ask_shave(update: Update, context: CallbackContext) -> int:
+    context.user_data['hygiene']['shave'] = update.message.text
+    log_hygiene_data(context.user_data['hygiene'])
+    await update.message.reply_text("Hygiene routine logged. Thank you!")
+    return ConversationHandler.END
 
 
 
@@ -727,6 +796,33 @@ cold_handler = ConversationHandler(
     states={
         LOG_COLD_SYMPTOMS: [MessageHandler(filters.Text() & ~filters.Command(), log_cold_symptoms)],
         LOG_COLD_SYMPTOMS_DETAILS: [MessageHandler(filters.Text() & ~filters.Command(), log_cold_symptoms_details)],
+    },
+    fallbacks=[CommandHandler('stop', stop)]
+)
+
+productivity_handler = ConversationHandler(
+    entry_points=[CommandHandler('productivity', ask_productivity)],
+    states={
+        PRODUCTIVITY_RATING: [MessageHandler(filters.Text() & ~filters.Command(), log_productivity)]
+    },
+    fallbacks=[CommandHandler('stop', stop)]
+)
+
+day_rating_handler = ConversationHandler(
+    entry_points=[CommandHandler('day', ask_day_rating)],
+    states={
+        DAY_RATING: [MessageHandler(filters.Text() & ~filters.Command(), log_day_rating)]
+    },
+    fallbacks=[CommandHandler('stop', stop)]
+)
+
+hygiene_handler = ConversationHandler(
+    entry_points=[CommandHandler('hygiene', ask_hygiene_routine)],
+    states={
+        SKIN_CARE: [MessageHandler(filters.Text() & ~filters.Command(), ask_skin_care)],
+        BRUSHING_TEETH: [MessageHandler(filters.Text() & ~filters.Command(), ask_brushing_teeth)],
+        SHOWER: [MessageHandler(filters.Text() & ~filters.Command(), ask_shower)],
+        SHAVE: [MessageHandler(filters.Text() & ~filters.Command(), ask_shave)],
     },
     fallbacks=[CommandHandler('stop', stop)]
 )

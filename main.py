@@ -6,7 +6,8 @@ from commands import (start, stop, commands, water, ask_water_intake,
                       alcohol, ask_alcohol_type, alcohol_details)
 from commands import (start_handler, stop_handler, commands_handler, water_handler, 
                       food_handler, coffee_handler, alcohol_handler, mood_handler, symptom_handler,
-                      wellbeing_handler, vitamins_supplements_handler, sleep_handler, social_battery_handler, heart_palpitation_handler, cold_handler)
+                      wellbeing_handler, vitamins_supplements_handler, sleep_handler, social_battery_handler, heart_palpitation_handler, cold_handler,
+                      productivity_handler, day_rating_handler, hygiene_handler)
 # from server import app
 from threading import Thread
 import json
@@ -15,7 +16,18 @@ from telegram.ext import JobQueue
 # `env`
 telegram_token = os.getenv('API_KEY')
 
-
+import tracemalloc 
+  
+tracemalloc.start() 
+  
+# Allocate some memory 
+a = [1] * (10 ** 6) 
+  
+snapshot = tracemalloc.take_snapshot() 
+top_stats = snapshot.statistics('lineno') 
+  
+for stat in top_stats[:10]: 
+   print(stat)
 
 
 if __name__ == '__main__':
@@ -41,6 +53,9 @@ application.add_handler(sleep_handler)
 application.add_handler(social_battery_handler)
 application.add_handler(heart_palpitation_handler)
 application.add_handler(cold_handler)
+application.add_handler(productivity_handler)
+application.add_handler(day_rating_handler)
+application.add_handler(hygiene_handler)
 
     # Run polling
 application.run_polling()

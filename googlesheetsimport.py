@@ -137,3 +137,21 @@ def cold_symptoms_data(cold_symptoms):
     key = f"cold_symptoms".lower()
     question = "Have you experienced any cold symptoms?"
     log_data_to_sheet(key, cold_symptoms, question)
+
+def log_productivity_data(productivity_rating):
+    key = f"productivity".lower()
+    question = "Are you feeling productive? (1-5)"
+    log_data_to_sheet(key, productivity_rating, question)
+
+def log_day_overall(day_overall_rating):
+    key = f"day_overall".lower()
+    question = "How was your day overall? (1-5)"
+    log_data_to_sheet(key, day_overall_rating, question)
+
+def log_hygiene_data(hygiene_data):
+    time_of_day = get_time_of_day()
+    for activity, response in hygiene_data.items():
+        key = f"hygiene_{activity}_{time_of_day}".lower()
+        question = f"Did you {activity.replace('_', ' ')} today?"
+        log_data_to_sheet(key, response, question)
+    print("Hygiene data logged successfully.")
