@@ -9,7 +9,7 @@ from commands import (start_handler, stop_handler, commands_handler, water_handl
                       food_handler, coffee_handler, alcohol_handler, mood_handler, symptom_handler,
                       wellbeing_handler, vitamins_supplements_handler, sleep_handler, social_battery_handler, heart_palpitation_handler, cold_handler,
                       productivity_handler, day_rating_handler, hygiene_handler)
-from morning import morning_handler
+from flask import app
 
 # from server import app
 from threading import Thread
@@ -22,7 +22,7 @@ telegram_token = os.getenv('API_KEY')
 if __name__ == '__main__':
     application = ApplicationBuilder().token(telegram_token).build()
     #job_queue = application.job_queue
-    #Thread(target=lambda: app.run(host='0.0.0.0', port=8080)).start()
+    Thread(target=lambda: app.run(host='0.0.0.0', port=8080)).start()
 
 
     # Add handlers to the application
@@ -45,6 +45,6 @@ application.add_handler(cold_handler)
 application.add_handler(productivity_handler)
 application.add_handler(day_rating_handler)
 application.add_handler(hygiene_handler)
-application.add_handler(morning_handler)
+#application.add_handler(morning_handler)
     # Run polling
 application.run_polling()
