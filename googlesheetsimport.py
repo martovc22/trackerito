@@ -80,7 +80,8 @@ def log_alcohol_intake(alcohol_type, alcohol_quantity, time_zone):
     # Construct a key that includes both the type and the quantity of alcohol
     key = alcohol_type
     data = alcohol_quantity
-    log_data_to_sheet(key, data, tz)
+    question = "How much alcohol did you have today?"
+    log_data_to_sheet(key, data, question)
 
 # Function to insert mood rating into google sheets
 def log_mood(mood_time, mood_rating, time_zone):

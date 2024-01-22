@@ -57,6 +57,7 @@ async def commands(update: Update, context: CallbackContext) -> None:
             "/cold - Log your cold symptoms\n"
             "/productivity - Log your productivity\n"
             "/day_rate - rate your day overall\n"
+            "/hygiene - Log your hygiene\n"
              "Other shall come soon🚨"
     )
 
