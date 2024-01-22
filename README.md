@@ -55,6 +55,7 @@ To install the project tracker, follow these steps:
 2. Install dependencies: `npm install`
 3. Start the application: `npm start`
 
+I personally run ut on Docker and through fly.io
 
 ## Contributing
 
