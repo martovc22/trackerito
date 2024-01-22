@@ -8,3 +8,4 @@ spotifyplaylist.py
 "__pycache__/"
 tracker.py
 morning.py
+Dockerfile
