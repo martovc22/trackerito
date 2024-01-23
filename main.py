@@ -9,12 +9,12 @@ from commands import (start_handler, stop_handler, commands_handler, water_handl
                       food_handler, coffee_handler, alcohol_handler, mood_handler, symptom_handler,
                       wellbeing_handler, vitamins_supplements_handler, sleep_handler, social_battery_handler, heart_palpitation_handler, cold_handler,
                       productivity_handler, day_rating_handler, hygiene_handler)
-from flask import app
+from server import app
 
 # from server import app
 from threading import Thread
 import json
-from telegram.ext import JobQueue
+#from telegram.ext import JobQueue
 
 # `env`
 telegram_token = os.getenv('API_KEY')
