@@ -312,18 +312,20 @@ async def track_all_symptoms(update: Update, context: CallbackContext) -> int:
                       ['4 - 😖 Strong discomfort', '5 - 😫 Really uncomfortable here']]
     await update.message.reply_text('Please rate your symptoms:', reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return await symptoms(update, context, SYMPTOMS[context.user_data['symptom_index']])
-
-
 # Well-being tracking
 WELLBEING_TRACKING, STRESS, ENERGY_LEVELS, HAPPINESS, ANXIETY, STRESS_CAUSE, STRESS_RELATED_HUNGER, WELLBEING_SCALE = range(8)
 
 WELLBEING_CATEGORIES = ['Stress😫', 'Energy Levels⚡️', 'Happiness😊', 'Anxiety😰', 'Stress Cause🔍', 'Stress-Related Hunger🍔']
 
 async def wellbeing(update: Update, context: CallbackContext) -> int:
+    context.user_data['category_index'] = 0
     return await wellbeing_categories(update, context, WELLBEING_CATEGORIES[0])
 
 async def wellbeing_categories(update: Update, context: CallbackContext, category: str) -> int:
-    if category in ['Stress😫', 'Energy Levels⚡️', 'Happiness😊', 'Anxiety😰', 'Stress-Related Hunger🍔']:
+    # Set the current category
+    context.user_data['current_category'] = category
+
+    if category in ['Stress😫', 'Energy Levels⚡️', 'Happiness😊', 'Anxiety😰']:
         reply_keyboard = [['0 - 😢 Very low', '1 - 😕 Low'],
                           ['2 - 😐 Meh', '3 - 😊 Moderate'],
                           ['4 - 😄 High', '5 - 😁 Very high']]
@@ -335,44 +337,29 @@ async def wellbeing_categories(update: Update, context: CallbackContext, categor
         reply_keyboard = [['Yes', 'No']]
         reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
         await update.message.reply_text(f"Are you feeling hungry due to stress?", reply_markup=reply_markup)
-
-    context.user_data['current_category'] = category
+    
     return WELLBEING_SCALE
-
 
 async def wellbeing_scale(update: Update, context: CallbackContext) -> int:
     user_data = context.user_data
-    current_category = user_data.get('current_category')
+    current_category = user_data['current_category']
     
     if current_category == 'Stress Cause🔍':
-        stress_cause_text = update.message.text  # Get the user's text input for the stress cause
-        log_wellbeing(current_category, stress_cause_text, "What is causing your stress today?")  # Log the text input
-        context.user_data['category_index'] += 1
+        stress_cause_text = update.message.text
+        log_wellbeing(current_category, stress_cause_text, "What is causing your stress today?")
         await update.message.reply_text(f"{current_category} logged successfully.")
     elif current_category == 'Stress-Related Hunger🍔':
-        stress_cause_text = update.message.text  # Get the user's text input for the stress cause
-        log_wellbeing(current_category, stress_cause_text, "Are you hungry from stress?")  # Log the text input
-        context.user_data['category_index'] += 1
-
-        reply_keyboard = [['Yes', 'No']]
-        reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-        await update.message.reply_text(f"{current_category} logged successfully. Are you hungry from stress?", reply_markup=reply_markup)
-
+        stress_hunger_response = update.message.text
+        log_wellbeing(current_category, stress_hunger_response, "Are you hungry from stress?")
+        await update.message.reply_text(f"{current_category} logged successfully.")
     else:
-        if 'category_index' not in context.user_data:
-            context.user_data['category_index'] = 0
         category_rating_text = update.message.text
         category_rating = category_rating_text[0] if category_rating_text else ''
         try:
             category_rating = int(category_rating)
             if 0 <= category_rating <= 5:
-                context.user_data['category_index'] += 1
                 log_wellbeing(current_category, category_rating, f"On a scale of 0-5, how would you rate your {current_category}?")
                 await update.message.reply_text(f"Well-being rating logged!")
-                if context.user_data['category_index'] < len(WELLBEING_CATEGORIES):
-                    return await wellbeing_categories(update, context, WELLBEING_CATEGORIES[context.user_data['category_index']])
-                else:
-                    return ConversationHandler.END
             else:
                 await update.message.reply_text('Invalid input. Please enter a number between 0 and 5.')
                 return WELLBEING_SCALE
@@ -380,17 +367,12 @@ async def wellbeing_scale(update: Update, context: CallbackContext) -> int:
             await update.message.reply_text('Invalid input. Please enter a valid number.')
             return WELLBEING_SCALE
 
-async def track_wellbeing(update: Update, context: CallbackContext) -> int:
-    context.user_data['category_index'] = 0
-    reply_keyboard = [['0 - 😢 Very low', '1 - 😕 Low'],
-                      ['2 - 😐 Meh', '3 - 😊 Moderate'],
-                      ['4 - 😄 High', '5 - 😁 Very high']]
+    user_data['category_index'] += 1  # Increment after handling the response
 
-    reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-
-    await update.message.reply_text('Please rate your well-being:', reply_markup=reply_markup)
-    return await wellbeing_categories(update, context, WELLBEING_CATEGORIES[context.user_data['category_index']])
-# idk why is this here - track_wellbeing  # Added reference to the function
+    if user_data['category_index'] >= len(WELLBEING_CATEGORIES):
+        return ConversationHandler.END
+    else:
+        return await wellbeing_categories(update, context, WELLBEING_CATEGORIES[user_data['category_index']])
 
 
 # Vitamins & Supplements tracking
@@ -575,7 +557,7 @@ async def log_cold_symptoms_details(update: Update, context: CallbackContext) ->
         await update.message.reply_text('All symptoms logged.')
         return ConversationHandler.END
 
-# Felling productive tracking
+# Feeling productive tracking
 PRODUCTIVITY_RATING = range(9)
 async def ask_productivity(update: Update, context: CallbackContext) -> int:
     reply_keyboard = [['1 - 😴 Not productive', '2 - 🙁 Slightly productive'],
