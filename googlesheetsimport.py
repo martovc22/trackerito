@@ -61,13 +61,13 @@ def insert_into_sheet_food(meal_datetime, timestamp, meal_details, meal_type):
     key = f"meal_type_{meal_type}".lower()
     food_actual_time = meal_datetime.split()[0]
     question = "What kind of food did you have?"
-    log_data_to_sheet(key, meal_details, food_actual_time=food_actual_time)
+    log_data_to_sheet(key, meal_details, question, food_actual_time=food_actual_time)
 
 # Function to insert water intake into google sheets
 def log_water_intake(volume, time_zone):
     key = 'water_intake'
     question = "How much water did you have today?"
-    log_data_to_sheet(key, volume)
+    log_data_to_sheet(key, volume, question)
 
 # Function to insert coffee intake into google sheets
 def log_coffee_intake(cups, time_zone):

@@ -21,7 +21,6 @@ telegram_token = os.getenv('API_KEY')
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(telegram_token).build()
-    #job_queue = application.job_queue
     Thread(target=lambda: app.run(host='0.0.0.0', port=8080)).start()
 
 
